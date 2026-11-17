@@ -153,6 +153,6 @@ public sealed partial class Config
         return issues;
     }
 
-    static bool ValidRect(double[] r) =>
-        r.Length == 4 && r.All(x => double.IsFinite(x) && x >= 0 && x <= 1) && r[0] < r[2] && r[1] < r[3];
+    static bool ValidRect(double[]? r) =>
+        r is { Length: 4 } && r.All(x => double.IsFinite(x) && x >= 0 && x <= 1) && r[0] < r[2] && r[1] < r[3];
 }

@@ -68,6 +68,42 @@ public class OpsTests : IDisposable
     }
 
     [Fact]
+    public void Validate_NullExcludeRoiElement_ReportsIssueInsteadOfThrowing()
+    {
+        var issues = new Config { ExcludeRois = [null!] }.Validate();
+        Assert.Equal([["exclude_rois"]], issues.Select(i => i.Keys));
+    }
+
+    [Fact]
+    public void Load_NullExcludeRoiElement_FallsBackToDefault()
+    {
+        var f = Path.Combine(dir, "config.json");
+        File.WriteAllText(f, """{"exclude_rois":[null],"pause_vk":19}""");
+        var c = Config.Load(f, warn: false);
+        Assert.Equal(new Config().ExcludeRois, c.ExcludeRois);
+        Assert.Equal(19, c.PauseVk);
+    }
+
+    [Fact]
+    public void LoadSafe_NullExcludeRoiElement_FallsBackToDefaultAndStarts()
+    {
+        var f = Path.Combine(dir, "config.json");
+        File.WriteAllText(f, """{"exclude_rois":[null],"pause_vk":19}""");
+        var c = Config.LoadSafe(f);
+        Assert.Equal(new Config().ExcludeRois, c.ExcludeRois);
+        Assert.Equal(19, c.PauseVk);
+    }
+
+    [Fact]
+    public void Apply_NullExcludeRoiElement_ReturnsErrorAndKeepsOldValue()
+    {
+        var c = new Config();
+        var err = c.Apply(new JsonObject { ["exclude_rois"] = new JsonArray((JsonNode?)null) }, []);
+        Assert.Equal("exclude_rois の各要素は 0〜1 の [左, 上, 右, 下] で、左<右 かつ 上<下 にしてください", err);
+        Assert.Equal(new Config().ExcludeRois, c.ExcludeRois);
+    }
+
+    [Fact]
     public void Apply_RejectsRelationViolation_AndKeepsOldValues()
     {
         var c = new Config();

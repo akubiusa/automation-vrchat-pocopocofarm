@@ -61,7 +61,7 @@ public sealed partial class Config
     }
 
     /// <summary>
-    /// 起動時用の読み込み。壊れた JSON でも落とさず、直近に正常に読めた設定(data/config.lastgood.json)、無ければ既定値で続ける。
+    /// 起動時用の読み込み。読み込みで何が起きても(壊れた JSON でも)落とさず、直近に正常に読めた設定(data/config.lastgood.json)、無ければ既定値で続ける。
     /// 正常に読めたら、その内容を lastgood に控える。
     /// </summary>
     public static Config LoadSafe(string path)
@@ -78,11 +78,11 @@ public sealed partial class Config
             }
             return cfg;
         }
-        catch (Exception ex) when (ex is JsonException or IOException or UnauthorizedAccessException)
+        catch (Exception ex)
         {
-            Log.Warn($"config.json を読めません({ex.Message})。直近に正常だった設定か既定値で続けます");
+            Log.Warn($"config.json を読めません({ex.GetType().Name}: {ex.Message})。直近に正常だった設定か既定値で続けます");
             try { if (File.Exists(good)) return Load(good); }
-            catch (Exception e) when (e is JsonException or IOException or UnauthorizedAccessException) { }
+            catch (Exception e) { Log.Warn($"config.lastgood.json も読めません({e.GetType().Name}: {e.Message})。既定値で続けます"); }
             return new Config();
         }
     }
